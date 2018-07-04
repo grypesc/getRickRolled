@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>lol</title>
+    <link rel="stylesheet" href="examples/css/style.css">
+	
+	<img id="grass" src="aa.jpg" />
+	
+    <script type="text/javascript" src="dist/paper-full.js"></script>
+    <script type="text/paperscript" canvas="canvas">
+	  var terrain = {
+		type: "grass",
+		color: "green",
+		speed: 1
+	}
+	
+	var constants = {
+		squareWidthInPixels: 30,
+		squareHeightInPixels: 30,
+	}
+		
+	var map = {
+		square: [],
+		heightInSquares: 20,
+		widthInSquares: 20,
+
+		initialize : function() {
+			for (var i = 0; i < this.heightInSquares; i++) {
+				this.square[i] = [];
+				for (var j = 0; j < this.widthInSquares; j++) {
+					this.square[i][j]=terrain;
+				}
+			}	
+		},
+		
+		draw : function() {
+			for (var i = 0; i < this.heightInSquares; i++) {
+				for (var j = 0; j < this.widthInSquares; j++) {
+					var raster = new Raster('grass');
+
+// Move the raster to the center of the view
+					raster.position.x = j*30;
+					raster.position.y = i*30;
+				}
+			}	
+		}
+	}
+	
+	var player = {
+		x: 10,//it's a no. square
+		y: 10,
+		xRelated: 12,
+		yRelated: 12,
+		direction: 0,
+		color: "pink",
+		
+		draw : function() {
+
+			var circle = new Path.Circle(new Point(this.x*constants.squareWidthInPixels+this.xRelated, this.y*constants.squareHeightInPixels+this.yRelated), 36);
+					circle.strokeWidth = 1;
+					circle.strokeColor = "white";
+					circle.fillColor = this.color;
+		},
+		
+		move : function(speed, direction) {
+			this.xRelated += Math.round( speed * Math.cos(direction) );
+			this.yRelated += Math.round( speed * (-1) * Math.sin(direction) );		
+
+		}
+	}
+	
+	function onKeyDown(event) {
+		if(event.key == 'w') {
+			player.move(3, Math.PI/2);
+		}
+
+		if(event.key == 's') {
+			player.move(3, 3*Math.PI/2);
+		}
+		
+		if(event.key == 'a') {
+			player.move(3, Math.PI);
+		}
+
+		if(event.key == 'd') {
+			player.move(3, 0);
+		}
+
+	}
+	
+	
+		map.initialize();
+
+	function onFrame(event) {
+		map.draw();
+		player.draw();
+    }
+	
+
+		console.log(player.xRelated);
+	  
+    </script>
+</head>
+<body style="background:black">
+    <canvas id="canvas" resize></canvas>
+</body>
+</html>
