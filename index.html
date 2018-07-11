@@ -1,0 +1,162 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Game</title>
+</head>
+  <script src="static/pixi/pixi.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+
+<body>
+  <script type="text/javascript">
+    let type = "WebGL"
+    if(!PIXI.utils.isWebGLSupported()){
+      type = "canvas"
+    }
+
+    //Create a Pixi Application
+    let app = new PIXI.Application({
+        width: 800,         // default: 800
+        height: 600,        // default: 600
+        antialias: true,    // default: false
+        transparent: false, // default: false
+        resolution: 1       // default: 1
+      }
+    );
+
+  PIXI.loader
+    .add("static/res/grass.jpg")
+    .add("static/res/sand.jpg")
+    .add("static/res/player.png")
+
+    .load(setup);
+
+    var constants = {
+  		squareWidthInPixels: 50,
+  		squareHeightInPixels: 50,
+  	}
+
+    var grass = {
+		path: "static/res/grass.jpg",
+	}
+    var sand = {
+    path: "static/res/sand.jpg",
+  }
+
+    var map = {
+  		square: [],
+  		heightInSquares: 12,
+  		widthInSquares: 12,
+
+      initialize : function() {
+  			for (var i = 0; i < this.heightInSquares; i++) {
+  				this.square[i] = [];
+  				for (var j = 0; j < this.widthInSquares; j++) {
+  					this.square[i][j]=grass;
+
+  				}
+  			}
+        this.square[2][6]=sand;
+        this.square[3][6]=sand;
+  		},
+    }
+
+
+
+
+
+function setup() {
+  map.initialize();
+  serverQueries.newPlayer();
+  serverQueries.emitMovement();
+  serverQueries.listenPlayers();
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+let socket = io();
+
+var movement = {
+  up: false,
+  down: false,
+  left: false,
+  right: false
+}
+document.addEventListener('keydown', function(event) {
+  switch (event.keyCode) {
+    case 65: // A
+      movement.left = true;
+      break;
+    case 87: // W
+      movement.up = true;
+      break;
+    case 68: // D
+      movement.right = true;
+      break;
+    case 83: // S
+      movement.down = true;
+      break;
+  }
+});
+document.addEventListener('keyup', function(event) {
+  switch (event.keyCode) {
+    case 65: // A
+      movement.left = false;
+      break;
+    case 87: // W
+      movement.up = false;
+      break;
+    case 68: // D
+      movement.right = false;
+      break;
+    case 83: // S
+      movement.down = false;
+      break;
+  }
+});
+
+var serverQueries = {
+  newPlayer: function() {
+    socket.emit('new player');
+  },
+
+  emitMovement: function() {
+    setInterval(function() {
+    socket.emit('movement', movement);
+  }, 1000 / 60);
+},
+
+
+  listenPlayers: function() {
+      socket.on('state', function(players) {
+
+      app.stage.removeChildren();
+      for (var i = 0; i < map.heightInSquares; i++) {
+        for (var j = 0; j < map.widthInSquares; j++) {
+            let square = new PIXI.Sprite(PIXI.loader.resources[map.square[i][j].path].texture);
+            square.x=constants.squareWidthInPixels*j;
+            square.y=constants.squareHeightInPixels*i;
+            app.stage.addChild(square);
+
+          }
+        }
+    for (var id in players) {
+      var player = players[id];
+      var playerSprite = new PIXI.Sprite(PIXI.loader.resources['static/res/player.png'].texture);
+      playerSprite.x=player.x;
+      playerSprite.y=player.y;
+      app.stage.addChild(playerSprite);
+    }
+
+  });}
+}
+    document.body.appendChild(app.view);
+/////////////////////////////////////////////////////////////////////////////
+
+
+    //Add the canvas that Pixi automatically created for you to the HTML document
+
+  </script>
+</body>
+</html>
