@@ -4,75 +4,108 @@
   <meta charset="utf-8">
   <title>Game</title>
 </head>
-  <script src="static/pixi/pixi.min.js"></script>
-  <script src="/socket.io/socket.io.js"></script>
+<script src="static/pixi/pixi.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
 
 <body>
-  <script type="text/javascript">
-    let type = "WebGL"
-    if(!PIXI.utils.isWebGLSupported()){
-      type = "canvas"
-    }
+  <script>
+  "use strict";
 
-    //Create a Pixi Application
-    let app = new PIXI.Application({
-        width: 800,         // default: 800
-        height: 600,        // default: 600
-        antialias: true,    // default: false
-        transparent: false, // default: false
-        resolution: 1       // default: 1
-      }
-    );
-
-  PIXI.loader
-    .add("static/res/grass.jpg")
-    .add("static/res/sand.jpg")
-    .add("static/res/player.png")
-
-    .load(setup);
-
-    var constants = {
-  		squareWidthInPixels: 50,
-  		squareHeightInPixels: 50,
-  	}
-
-    var grass = {
-		path: "static/res/grass.jpg",
-	}
-    var sand = {
-    path: "static/res/sand.jpg",
+  let type = "WebGL"
+  if(!PIXI.utils.isWebGLSupported()){
+    type = "canvas"
   }
 
-    var map = {
-  		square: [],
-  		heightInSquares: 12,
-  		widthInSquares: 12,
 
-      initialize : function() {
-  			for (var i = 0; i < this.heightInSquares; i++) {
-  				this.square[i] = [];
-  				for (var j = 0; j < this.widthInSquares; j++) {
-  					this.square[i][j]=grass;
+  let app = new PIXI.Application({
+    width: 1000,         // default: 800
+    height: 800,        // default: 600
+    antialias: true,    // default: false
+    transparent: false, // default: false
+    resolution: 1       // default: 1
+  }
+);
+document.body.appendChild(app.view);
+PIXI.loader
+.add("static/res/grass.png")
+.add("static/res/sand.png")
+.add("static/res/edge.png")
+.add("static/res/player.png")
+.load(setup);
 
-  				}
-  			}
-        this.square[2][6]=sand;
-        this.square[3][6]=sand;
-  		},
+let constants = {
+  squareWidthInPixels: 50,
+  squareHeightInPixels: 50,
+  width: 1000,         // default: 800
+  height: 800,
+}
+
+function Terrain(newPath)  {
+  this.path=newPath;
+}
+
+class GameMap  {
+  constructor() {
+    this.square = [];
+    this.heightInSquares = 21;
+    this.widthInSquares = 21;
+
+    for (let i = 0; i < this.heightInSquares; i++) {
+      this.square[i] = [];
+      for (let j = 0; j < this.widthInSquares; j++) {
+        this.square[i][j]=new Terrain('static/res/grass.png');
+      }
     }
-
-
-
-
-
-function setup() {
-  map.initialize();
-  serverQueries.newPlayer();
-  serverQueries.emitMovement();
-  serverQueries.listenPlayers();
+  }
 
 }
 
+class Player {
+  constructor() {
+    this.x = 0;
+    this.y = 0;
+    this.health = 0;
+  }
+}
+
+class CurrentPlayer extends Player {
+  constructor() {
+    super ();
+    this.xAbsolute = 0;
+    this.yAbsolute = 0;
+  }
+}
+
+let gameMap = new GameMap();
+let players = [];
+let currentPlayer = new CurrentPlayer();
+
+
+function setup() {
+  serverQueries.newPlayer();
+  serverQueries.emitMovement();
+  serverQueries.listenUpdate();
+  app.ticker.add(delta => gameLoop(delta));
+}
+
+function gameLoop(delta){
+  app.stage.removeChildren();
+  for (let i = 0; i < 21; i++) {
+    for (let j = 0; j < 21; j++) {
+      let square = new PIXI.Sprite(PIXI.loader.resources[gameMap.square[i][j].path].texture);
+      square.x=constants.squareWidthInPixels*j-currentPlayer.xAbsolute%50;
+      square.y=constants.squareHeightInPixels*i-currentPlayer.yAbsolute%50;
+      app.stage.addChild(square);
+    }
+  }
+  for (let id in players) {
+    let player = players[id];
+    let playerSprite = new PIXI.Sprite(PIXI.loader.resources['static/res/player.png'].texture);
+    playerSprite.x=player.x;
+    playerSprite.y=player.y;
+    app.stage.addChild(playerSprite);
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 let socket = io();
@@ -86,33 +119,33 @@ var movement = {
 document.addEventListener('keydown', function(event) {
   switch (event.keyCode) {
     case 65: // A
-      movement.left = true;
-      break;
+    movement.left = true;
+    break;
     case 87: // W
-      movement.up = true;
-      break;
+    movement.up = true;
+    break;
     case 68: // D
-      movement.right = true;
-      break;
+    movement.right = true;
+    break;
     case 83: // S
-      movement.down = true;
-      break;
+    movement.down = true;
+    break;
   }
 });
 document.addEventListener('keyup', function(event) {
   switch (event.keyCode) {
     case 65: // A
-      movement.left = false;
-      break;
+    movement.left = false;
+    break;
     case 87: // W
-      movement.up = false;
-      break;
+    movement.up = false;
+    break;
     case 68: // D
-      movement.right = false;
-      break;
+    movement.right = false;
+    break;
     case 83: // S
-      movement.down = false;
-      break;
+    movement.down = false;
+    break;
   }
 });
 
@@ -123,40 +156,35 @@ var serverQueries = {
 
   emitMovement: function() {
     setInterval(function() {
-    socket.emit('movement', movement);
-  }, 1000 / 60);
-},
+      socket.emit('movement', movement);
+    }, 1000 / 60);
+  },
 
 
-  listenPlayers: function() {
-      socket.on('state', function(players) {
+  listenUpdate: function() {
+    socket.on('update', function(newPlayers, newcurrentPlayer, newTruecurrentPlayer, currentPlayerMap) {
+      players = newPlayers;
+      currentPlayer=newcurrentPlayer;
+      currentPlayer.xAbsolute=newTruecurrentPlayer.x;
+      currentPlayer.yAbsolute=newTruecurrentPlayer.y;
 
-      app.stage.removeChildren();
-      for (var i = 0; i < map.heightInSquares; i++) {
-        for (var j = 0; j < map.widthInSquares; j++) {
-            let square = new PIXI.Sprite(PIXI.loader.resources[map.square[i][j].path].texture);
-            square.x=constants.squareWidthInPixels*j;
-            square.y=constants.squareHeightInPixels*i;
-            app.stage.addChild(square);
-
-          }
+      for (var i = 0; i < 21; i++) {
+        for (var j = 0; j < 21; j++) {
+          gameMap.square[i][j].path = 'static/res/'+currentPlayerMap[i][j]+'.png';
         }
-    for (var id in players) {
-      var player = players[id];
-      var playerSprite = new PIXI.Sprite(PIXI.loader.resources['static/res/player.png'].texture);
-      playerSprite.x=player.x;
-      playerSprite.y=player.y;
-      app.stage.addChild(playerSprite);
+      }
     }
 
-  });}
+  );
 }
-    document.body.appendChild(app.view);
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 
 
-    //Add the canvas that Pixi automatically created for you to the HTML document
+//Add the canvas that Pixi automatically created for you to the HTML document
 
-  </script>
+</script>
 </body>
 </html>
