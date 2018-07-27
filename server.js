@@ -1,17 +1,18 @@
+'use strict';
 
+class Terrain {
+  constructor(speedArg, typeArg) {
+    this.speed = speedArg;
+    this.type=typeArg;
+  }
+}
 
-var grass = {
-  type: 'grass',
-  speed: 5
-}
-var sand = {
-  type: 'sand',
-  speed: 3
-}
-var edge = {
-  type: 'edge',
-  speed: -1
-}
+//let Constants =  require ('./static/server/constants.js');
+
+let sand = new Terrain (3, 'sand');
+let edge = new Terrain (3, 'edge');
+let grass = new Terrain (5, 'grass');
+//console.log(constants.width);
 var map = {
   square: [],
   heightInSquares: 100,
@@ -21,7 +22,7 @@ var map = {
     for (var i = 0; i < this.heightInSquares; i++) {
       this.square[i] = [];
       for (var j = 0; j < this.widthInSquares; j++) {
-        if (i==0 || j==0)
+        if (i==0 || j==0 || i==99 || j==99)
           this.square[i][j]=edge;
         else
           this.square[i][j]=grass;
@@ -86,20 +87,25 @@ io.on('connection', function(socket) {
     console.log(players);
   });
 
-  socket.on('movement', function(data) {
-    var player = players[socket.id] || {};
+  socket.on('input', function(data) {
+    let player = players[socket.id] || {};
+    let speed = map.square[Math.floor((player.y+25)/50)][Math.floor((player.x+25)/50)].speed;
     if (data.left) {
-      player.x -= 3;
+      player.x -= speed;
     }
     if (data.up) {
-      player.y -= 3;
+      player.y -= speed;
     }
     if (data.right) {
-      player.x += 3;
+      player.x += speed;
     }
     if (data.down) {
-      player.y += 3;
+      player.y += speed;
     }
+    if (player.x<50) player.x=50;
+    else if (player.x>100*50-100) player.x=100*50-100;
+    if (player.y<50) player.y=50;
+    else if (player.y>100*50-100) player.y=100*50-100;
   });
 
 
@@ -115,17 +121,17 @@ for (var i = 0; i < 21; i++) {
 
 setInterval(function() {
   for (var key in players) {
-    thisPlayer=players[key];//players
-    thisPlayerAbsolute=thisPlayer;
-    var emitPlayers = JSON.parse(JSON.stringify(players));
+    let thisPlayer=players[key];//players
+    let thisPlayerAbsolute=thisPlayer;
+    let emitPlayers = JSON.parse(JSON.stringify(players));
     for (var key2 in emitPlayers) {
-      emitPlayers[key2].x=emitPlayers[key2].x - thisPlayer.x + 500;
-      emitPlayers[key2].y=emitPlayers[key2].y - thisPlayer.y + 400;
+      emitPlayers[key2].x=emitPlayers[key2].x - thisPlayer.x + 500//constants.width/2 + constants.playerSpriteWidth/2;
+      emitPlayers[key2].y=emitPlayers[key2].y - thisPlayer.y + 400//constants.height/2 + constants.playerSpriteHeight/2;
     }
 
     for (var i = 0; i < 21; i++) {//map squares
       for (var j = 0; j < 21; j++) {
-        playerMap[i][j]=map.square[Math.min(Math.max(Math.floor(players[key].y/50)-10+i , 0) , 99)]
+        playerMap[i][j]=map.square[Math.min(Math.max(Math.floor(players[key].y/50)-8+i , 0) , 99)]
                                   [Math.min(Math.max(Math.floor(players[key].x/50)-10+j , 0) , 99)].type;
       }
     }

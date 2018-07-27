@@ -6,6 +6,7 @@
 </head>
 <script src="static/pixi/pixi.min.js"></script>
 <script src="/socket.io/socket.io.js"></script>
+<script src="static/constants.js"></script>
 
 <body>
   <script>
@@ -16,15 +17,17 @@
     type = "canvas"
   }
 
+  let constants = new Constants();
 
   let app = new PIXI.Application({
-    width: 1000,         // default: 800
-    height: 800,        // default: 600
+    width: constants.width,         // default: 800
+    height: constants.height,        // default: 600
     antialias: true,    // default: false
     transparent: false, // default: false
     resolution: 1       // default: 1
   }
 );
+
 document.body.appendChild(app.view);
 PIXI.loader
 .add("static/res/grass.png")
@@ -33,12 +36,6 @@ PIXI.loader
 .add("static/res/player.png")
 .load(setup);
 
-let constants = {
-  squareWidthInPixels: 50,
-  squareHeightInPixels: 50,
-  width: 1000,         // default: 800
-  height: 800,
-}
 
 function Terrain(newPath)  {
   this.path=newPath;
@@ -65,6 +62,7 @@ class Player {
     this.x = 0;
     this.y = 0;
     this.health = 0;
+    this.direction = Math.PI;
   }
 }
 
@@ -76,6 +74,7 @@ class CurrentPlayer extends Player {
   }
 }
 
+
 let gameMap = new GameMap();
 let players = [];
 let currentPlayer = new CurrentPlayer();
@@ -83,7 +82,7 @@ let currentPlayer = new CurrentPlayer();
 
 function setup() {
   serverQueries.newPlayer();
-  serverQueries.emitMovement();
+  serverQueries.emitinput();
   serverQueries.listenUpdate();
   app.ticker.add(delta => gameLoop(delta));
 }
@@ -110,53 +109,64 @@ function gameLoop(delta){
 ////////////////////////////////////////////////////////////////////////////////
 let socket = io();
 
-var movement = {
+var input = {
   up: false,
   down: false,
   left: false,
-  right: false
+  right: false,
+  direction:  Math.PI
 }
+
 document.addEventListener('keydown', function(event) {
   switch (event.keyCode) {
     case 65: // A
-    movement.left = true;
+    input.left = true;
     break;
     case 87: // W
-    movement.up = true;
+    input.up = true;
     break;
     case 68: // D
-    movement.right = true;
+    input.right = true;
     break;
     case 83: // S
-    movement.down = true;
+    input.down = true;
     break;
   }
 });
+
 document.addEventListener('keyup', function(event) {
   switch (event.keyCode) {
     case 65: // A
-    movement.left = false;
+    input.left = false;
     break;
     case 87: // W
-    movement.up = false;
+    input.up = false;
     break;
     case 68: // D
-    movement.right = false;
+    input.right = false;
     break;
     case 83: // S
-    movement.down = false;
+    input.down = false;
     break;
   }
 });
+
+document.addEventListener('mousemove', function(event) {
+  currentPlayer.direction = Math.atan((400-event.y)/(event.x-500));
+  console.log(currentPlayer.direction);
+
+  }
+);
+
 
 var serverQueries = {
   newPlayer: function() {
     socket.emit('new player');
   },
 
-  emitMovement: function() {
+  emitinput: function() {
     setInterval(function() {
-      socket.emit('movement', movement);
+      socket.emit('input', input);
     }, 1000 / 60);
   },
 
