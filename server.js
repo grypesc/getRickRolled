@@ -7,35 +7,15 @@ class Terrain {
   }
 }
 
-//let Constants =  require ('./static/server/constants.js');
-
+let Model =  require ('./static/server/Model.js');
 let sand = new Terrain (3, 'sand');
 let edge = new Terrain (3, 'edge');
 let grass = new Terrain (5, 'grass');
 //console.log(constants.width);
-var map = {
-  square: [],
-  heightInSquares: 100,
-  widthInSquares: 100,
 
-  initialize : function() {
-    for (var i = 0; i < this.heightInSquares; i++) {
-      this.square[i] = [];
-      for (var j = 0; j < this.widthInSquares; j++) {
-        if (i==0 || j==0 || i==99 || j==99)
-          this.square[i][j]=edge;
-        else
-          this.square[i][j]=grass;
+let model = new Model();
+let map = model.getMap();
 
-      }
-    }
-    for (var i = 1; i < 10; i++)
-      for (var j = 1; j <= i; j++)
-          this.square[i][j]=sand;
-  },
-}
-
-map.initialize();
 // Dependencies
 var express = require('express');
 var http = require('http');
