@@ -6,7 +6,7 @@
 </head>
 <script src="static/pixi/pixi.min.js"></script>
 <script src="/socket.io/socket.io.js"></script>
-<script src="static/constants.js"></script>
+<script src="static/client/controller.js"></script>
 
 <body>
   <script>
@@ -17,11 +17,11 @@
     type = "canvas"
   }
 
-  let constants = new Constants();
+  let controller = new Controller();
 
   let app = new PIXI.Application({
-    width: constants.width,         // default: 800
-    height: constants.height,        // default: 600
+    width: controller.width,         // default: 800
+    height: controller.height,        // default: 600
     antialias: true,    // default: false
     transparent: false, // default: false
     resolution: 1       // default: 1
@@ -41,39 +41,6 @@ function Terrain(newPath)  {
   this.path=newPath;
 }
 
-class GameMap  {
-  constructor() {
-    this.square = [];
-    this.heightInSquares = 21;
-    this.widthInSquares = 21;
-
-    for (let i = 0; i < this.heightInSquares; i++) {
-      this.square[i] = [];
-      for (let j = 0; j < this.widthInSquares; j++) {
-        this.square[i][j]=new Terrain('static/res/grass.png');
-      }
-    }
-  }
-
-}
-
-class Player {
-  constructor() {
-    this.x = 0;
-    this.y = 0;
-    this.health = 0;
-    this.direction = Math.PI;
-  }
-}
-
-class CurrentPlayer extends Player {
-  constructor() {
-    super ();
-    this.xAbsolute = 0;
-    this.yAbsolute = 0;
-  }
-}
-
 
 let gameMap = new GameMap();
 let players = [];
@@ -81,9 +48,9 @@ let currentPlayer = new CurrentPlayer();
 
 
 function setup() {
-  serverQueries.newPlayer();
-  serverQueries.emitinput();
-  serverQueries.listenUpdate();
+  controller.newPlayer();
+  controller.emitInput();
+  controller.listenToUpdate();
   app.ticker.add(delta => gameLoop(delta));
 }
 
@@ -92,8 +59,8 @@ function gameLoop(delta){
   for (let i = 0; i < 21; i++) {
     for (let j = 0; j < 21; j++) {
       let square = new PIXI.Sprite(PIXI.loader.resources[gameMap.square[i][j].path].texture);
-      square.x=constants.squareWidthInPixels*j-currentPlayer.xAbsolute%50;
-      square.y=constants.squareHeightInPixels*i-currentPlayer.yAbsolute%50;
+      square.x=controller.squareWidthInPixels*j-currentPlayer.xAbsolute%50;
+      square.y=controller.squareHeightInPixels*i-currentPlayer.yAbsolute%50;
       app.stage.addChild(square);
     }
   }
@@ -109,7 +76,7 @@ function gameLoop(delta){
 ////////////////////////////////////////////////////////////////////////////////
 let socket = io();
 
-var input = {
+let input = {
   up: false,
   down: false,
   left: false,
@@ -153,47 +120,17 @@ document.addEventListener('keyup', function(event) {
 
 document.addEventListener('mousemove', function(event) {
   currentPlayer.direction = Math.atan((400-event.y)/(event.x-500));
-  console.log(currentPlayer.direction);
+//  console.log(currentPlayer.direction);
 
   }
 );
 
 
-var serverQueries = {
-  newPlayer: function() {
-    socket.emit('new player');
-  },
-
-  emitinput: function() {
-    setInterval(function() {
-      socket.emit('input', input);
-    }, 1000 / 60);
-  },
-
-
-  listenUpdate: function() {
-    socket.on('update', function(newPlayers, newcurrentPlayer, newTruecurrentPlayer, currentPlayerMap) {
-      players = newPlayers;
-      currentPlayer=newcurrentPlayer;
-      currentPlayer.xAbsolute=newTruecurrentPlayer.x;
-      currentPlayer.yAbsolute=newTruecurrentPlayer.y;
-
-      for (var i = 0; i < 21; i++) {
-        for (var j = 0; j < 21; j++) {
-          gameMap.square[i][j].path = 'static/res/'+currentPlayerMap[i][j]+'.png';
-        }
-      }
-    }
-
-  );
-}
-}
 
 
 /////////////////////////////////////////////////////////////////////////////
 
 
-//Add the canvas that Pixi automatically created for you to the HTML document
 
 </script>
 </body>

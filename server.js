@@ -14,7 +14,6 @@ let grass = new Terrain (5, 'grass');
 //console.log(constants.width);
 
 let model = new Model();
-let map = model.getMap();
 
 // Dependencies
 var express = require('express');
@@ -69,7 +68,7 @@ io.on('connection', function(socket) {
 
   socket.on('input', function(data) {
     let player = players[socket.id] || {};
-    let speed = map.square[Math.floor((player.y+25)/50)][Math.floor((player.x+25)/50)].speed;
+    let speed = model.map.square[Math.floor((player.y+25)/50)][Math.floor((player.x+25)/50)].speed;
     if (data.left) {
       player.x -= speed;
     }
@@ -111,7 +110,7 @@ setInterval(function() {
 
     for (var i = 0; i < 21; i++) {//map squares
       for (var j = 0; j < 21; j++) {
-        playerMap[i][j]=map.square[Math.min(Math.max(Math.floor(players[key].y/50)-8+i , 0) , 99)]
+        playerMap[i][j]=model.map.square[Math.min(Math.max(Math.floor(players[key].y/50)-8+i , 0) , 99)]
                                   [Math.min(Math.max(Math.floor(players[key].x/50)-10+j , 0) , 99)].type;
       }
     }
