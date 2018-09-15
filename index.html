@@ -5,7 +5,7 @@
   <title>Game</title>
 </head>
 <script src="static/pixi/pixi.min.js"></script>
-<script src="/socket.io/socket.io.js"></script>
+<script src="socket.io/socket.io.js"></script>
 <script src="static/client/controller.js"></script>
 
 <body>
@@ -33,7 +33,9 @@ PIXI.loader
 .add("static/res/grass.png")
 .add("static/res/sand.png")
 .add("static/res/edge.png")
+.add("static/res/water.png")
 .add("static/res/player.png")
+.add("static/res/hand.png")
 .load(setup);
 
 
@@ -70,6 +72,10 @@ function gameLoop(delta){
     playerSprite.x=player.x;
     playerSprite.y=player.y;
     app.stage.addChild(playerSprite);
+    let handSprite = new PIXI.Sprite(PIXI.loader.resources['static/res/hand.png'].texture);
+    handSprite.x=player.x+25+25*Math.cos(player.direction);
+    handSprite.y=player.y+25+25*Math.sin(player.direction);
+    app.stage.addChild(handSprite);
   }
 }
 
@@ -119,8 +125,13 @@ document.addEventListener('keyup', function(event) {
 });
 
 document.addEventListener('mousemove', function(event) {
-  currentPlayer.direction = Math.atan((400-event.y)/(event.x-500));
-//  console.log(currentPlayer.direction);
+  let xxx=(event.y-435)/(event.x-535);
+  if (event.x>535)
+    currentPlayer.direction = Math.atan(xxx);
+  else
+    currentPlayer.direction = Math.PI-Math.atan((-1)*xxx);
+  input.direction=currentPlayer.direction;
+  console.log(event.x, event.y);
 
   }
 );

@@ -1,16 +1,6 @@
 'use strict';
 
-class Terrain {
-  constructor(speedArg, typeArg) {
-    this.speed = speedArg;
-    this.type=typeArg;
-  }
-}
-
 let Model =  require ('./static/server/Model.js');
-let sand = new Terrain (3, 'sand');
-let edge = new Terrain (3, 'edge');
-let grass = new Terrain (5, 'grass');
 //console.log(constants.width);
 
 let model = new Model();
@@ -25,7 +15,7 @@ var app = express();
 var server = http.Server(app);
 var io = socketIO(server);
 
-app.set('port', 5000);
+app.set('port', 54070);
 app.use('/static', express.static(__dirname + '/static'));
 
 // Routing
@@ -34,15 +24,12 @@ app.get('/', function(request, response) {
 });
 
 // Starts the server.
-server.listen(5000, '0.0.0.0');
+server.listen(54070, "0.0.0.0");
 
 // Add the WebSocket handlers
 io.on('connection', function(socket) {
 });
 
-setInterval(function() {
-  io.sockets.emit('message', 'hi!');
-}, 1000);
 
 require('dns').lookup(require('os').hostname(), function (err, add, fam) {
   console.log('addr: '+add);
@@ -55,10 +42,8 @@ var players = {};
 
 io.on('connection', function(socket) {
   socket.on('new player', function() {
-    players[socket.id] = {
-      x: 1000,
-      y: 500
-    };
+    console.log("Player connected: " +socket.id)
+    players[socket.id] = model.getNewPlayer(500,500,100,0);
   });
 
   socket.on('disconnect', function() {
@@ -69,6 +54,7 @@ io.on('connection', function(socket) {
   socket.on('input', function(data) {
     let player = players[socket.id] || {};
     let speed = model.map.square[Math.floor((player.y+25)/50)][Math.floor((player.x+25)/50)].speed;
+    player.direction=data.direction;
     if (data.left) {
       player.x -= speed;
     }
@@ -108,7 +94,7 @@ setInterval(function() {
       emitPlayers[key2].y=emitPlayers[key2].y - thisPlayer.y + 400//constants.height/2 + constants.playerSpriteHeight/2;
     }
 
-    for (var i = 0; i < 21; i++) {//map squares
+    for (var i = 0; i < 21; i++) {
       for (var j = 0; j < 21; j++) {
         playerMap[i][j]=model.map.square[Math.min(Math.max(Math.floor(players[key].y/50)-8+i , 0) , 99)]
                                   [Math.min(Math.max(Math.floor(players[key].x/50)-10+j , 0) , 99)].type;
