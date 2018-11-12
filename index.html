@@ -3,81 +3,29 @@
 <head>
   <meta charset="utf-8">
   <title>Game</title>
+  <link rel="stylesheet" href="static/client/game.css">
 </head>
-<script src="static/pixi/pixi.min.js"></script>
+<script src="static/client/pixi/pixi.min.js"></script>
 <script src="socket.io/socket.io.js"></script>
 <script src="static/client/controller.js"></script>
 
 <body>
   <script>
-  "use strict";
+"use strict";
 
-  let type = "WebGL"
-  if(!PIXI.utils.isWebGLSupported()){
-    type = "canvas"
-  }
+let controller = new Controller();
 
-  let controller = new Controller();
-
-  let app = new PIXI.Application({
-    width: controller.width,         // default: 800
-    height: controller.height,        // default: 600
-    antialias: true,    // default: false
-    transparent: false, // default: false
-    resolution: 1       // default: 1
-  }
-);
-
-document.body.appendChild(app.view);
-PIXI.loader
-.add("static/res/grass.png")
-.add("static/res/sand.png")
-.add("static/res/edge.png")
-.add("static/res/water.png")
-.add("static/res/player.png")
-.add("static/res/hand.png")
-.load(setup);
-
-
-function Terrain(newPath)  {
-  this.path=newPath;
+</script><script src="static/client/view.js"></script><script>
+function Terrain(pathArg)  {
+  this.path=pathArg;
 }
-
+document.body.appendChild(app.view);
 
 let gameMap = new GameMap();
 let players = [];
+let bullets = [];
+let items = [];
 let currentPlayer = new CurrentPlayer();
-
-
-function setup() {
-  controller.newPlayer();
-  controller.emitInput();
-  controller.listenToUpdate();
-  app.ticker.add(delta => gameLoop(delta));
-}
-
-function gameLoop(delta){
-  app.stage.removeChildren();
-  for (let i = 0; i < 21; i++) {
-    for (let j = 0; j < 21; j++) {
-      let square = new PIXI.Sprite(PIXI.loader.resources[gameMap.square[i][j].path].texture);
-      square.x=controller.squareWidthInPixels*j-currentPlayer.xAbsolute%50;
-      square.y=controller.squareHeightInPixels*i-currentPlayer.yAbsolute%50;
-      app.stage.addChild(square);
-    }
-  }
-  for (let id in players) {
-    let player = players[id];
-    let playerSprite = new PIXI.Sprite(PIXI.loader.resources['static/res/player.png'].texture);
-    playerSprite.x=player.x;
-    playerSprite.y=player.y;
-    app.stage.addChild(playerSprite);
-    let handSprite = new PIXI.Sprite(PIXI.loader.resources['static/res/hand.png'].texture);
-    handSprite.x=player.x+25+25*Math.cos(player.direction);
-    handSprite.y=player.y+25+25*Math.sin(player.direction);
-    app.stage.addChild(handSprite);
-  }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 let socket = io();
@@ -87,7 +35,8 @@ let input = {
   down: false,
   left: false,
   right: false,
-  direction:  Math.PI
+  direction:  Math.PI,
+  LMB: false,
 }
 
 document.addEventListener('keydown', function(event) {
@@ -125,24 +74,23 @@ document.addEventListener('keyup', function(event) {
 });
 
 document.addEventListener('mousemove', function(event) {
-  let xxx=(event.y-435)/(event.x-535);
-  if (event.x>535)
-    currentPlayer.direction = Math.atan(xxx);
+  let arg=(event.y-controller.height/2 - controller.padding)/(event.x-controller.width/2-controller.padding);
+  if (event.x>=controller.width/2 +controller.padding )
+    currentPlayer.direction = Math.atan(arg);
   else
-    currentPlayer.direction = Math.PI-Math.atan((-1)*xxx);
+    currentPlayer.direction = Math.PI-Math.atan((-1)*arg);
   input.direction=currentPlayer.direction;
-  console.log(event.x, event.y);
-
   }
 );
 
-
-
-
-/////////////////////////////////////////////////////////////////////////////
-
-
+document.addEventListener("mousedown", function() {
+    input.LMB=true;
+});
+document.addEventListener("mouseup", function() {
+    input.LMB=false;
+});
 
 </script>
+
 </body>
 </html>
