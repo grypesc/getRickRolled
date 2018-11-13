@@ -7,12 +7,11 @@ class Terrain {
     this.damage = damageArg;
   }
 }
-
 let sand = new Terrain (3, 'sand', 0);
 let edge = new Terrain (3, 'edge', 0);
 let grass = new Terrain (5, 'grass', 0);
 let water = new Terrain (1, 'water', 0);
-let lava = new Terrain (2, 'lava', 5);
+let lava = new Terrain (10, 'lava', 5);
 
 
 
@@ -75,6 +74,10 @@ class Map {
   }
 }
 
+class Building {
+  constructor()
+}
+
 class Point {
   constructor(xArg, yArg) {
     this.x=xArg;
@@ -89,20 +92,20 @@ class Player {
     this.health = healthArg;
     this.direction = directionArg;
     this.name = nameArg;
-    this.weapon = new DoublePistol();
+    this.weapon = new Pistol();
   }
 
 }
 
 class Bullet {
-  constructor(xArg, yArg, directionArg) {
+  constructor(xArg, yArg, directionArg, damageArg) {
     this.x = xArg;
     this.y = yArg;
     this.direction = directionArg;
     this.speed = 20;
     this.range = 1000;
     this.distanceTraveled = 0;
-    this.damage = 300;
+    this.damage = damageArg;
   };
 
 }
@@ -150,7 +153,7 @@ class BulletPhysics {
 class Items {
   constructor() {
     this.array = [];
-    this.generateItems(1);
+    this.generateItems(100);
   };
 
   checkColissions(players) {
@@ -158,8 +161,11 @@ class Items {
     {
       let player=players[id];
       for (let i=0; i<this.array.length; i++) {
-        if (this.array[i].x>=player.x-20 && this.array[i].x<=player.x+20 && this.array[i].y>=player.y-20 && this.array[i].y<=player.y+20) {
-          player.weapon = this.array[i];
+        if (  this.array[i].x>=player.x-this.array[i].spriteWidth && this.array[i].x<=player.x+this.array[i].spriteWidth && this.array[i].y>=player.y-this.array[i].spriteHeight && this.array[i].y<=player.y+this.array[i].spriteHeight) {
+          if (this.array[i] instanceof Weapon)
+            player.weapon = this.array[i];
+          else
+            this.array[i].heal(player);
           this.array.splice(i,1);
           i--;
         }
@@ -168,22 +174,37 @@ class Items {
   };
 
   generateItems(amount) {
-/*    let array = [];
-    array.push(new Pistol());
-    array.push(new DoublePistol());
-    array.push(new Rifle());
     for (let i=0; i<amount; i++)
     {
-      let index = Math.floor(1000*Math.random())%3;
-      if (index == 0)
+      let item = new Item();
+      switch( Math.floor(Math.random()*5) ) {
 
-      this.array.push()*/
-      let rifle = new Rifle();
-      rifle.x = 100;
-      rifle.y = 100;
-      this.array.push(rifle);
-    }
+           case 0:
+           item = new DoublePistol();
+           break;
 
+           case 1:
+           item = new Rifle();
+           break;
+
+           case 2:
+           item = new Smg();
+           break;
+
+           case 3:
+           item = new Gatling();
+           break;
+
+           case 4:
+           item = new HealthPack();
+           break;
+
+       }
+       item.x=Math.floor(Math.random()*5000);
+       item.y=Math.floor(Math.random()*5000);
+       this.array.push(item);
+     }
+  }
 }
 
 class Item {
@@ -191,8 +212,20 @@ class Item {
     this.x = x;
     this.y = y;
   }
+}
 
+class HealthPack extends Item {
+  constructor () {
+    super();
+    this.healthGain = 500;
+    this.spriteName = "healthPack.png";
+    this.spriteWidth = 100;
+    this.spriteHeight = 100;
+  }
 
+  heal(player) {
+    player.health+=this.healthGain;
+  }
 
 }
 
@@ -212,20 +245,36 @@ class Weapon extends Item {
   }
 }
 
-class Pistol extends Weapon {
-  constructor() {
-    super(300, 1, 400);
-    this.spriteName = "pistol.png";
-    this.spriteWidth = 30;
-    this.spriteHeight = 18;
+class AutomaticWeapon extends Weapon {
+  constructor(dmg, acc, fireRate) {
+    super(dmg, acc, fireRate);
+  };
+
+  shoot (x, y, direction, bulletPhysics)
+  {
+    let time = new Date();
+    if (time - this.lastShot >= this.fireRate) {
+      this.lastShot = time;
+      let spread = (Math.random() - 0.5)*Math.PI*(100-this.accuracy)/100;
+      let bullet = new Bullet(x+50*Math.cos(direction), y+50*Math.sin(direction), direction+spread, this.damage);
+      this.setBulletStats(bullet);
+      bulletPhysics.bullets.push(bullet);
+    }
   }
+}
+
+class SemiAutomaticWeapon extends Weapon {
+  constructor(dmg, acc, fireRate) {
+    super(dmg, acc, fireRate);
+  };
 
   shoot (x, y, direction, bulletPhysics)
   {
     let time = new Date();
     if(!this.triggered && time - this.lastShot >= this.fireRate) {
       this.lastShot = time;
-      let bullet = new Bullet(x +50*Math.cos(direction), y+50*Math.sin(direction), direction);
+      let spread = (Math.random() - 0.5)*Math.PI*(100-this.accuracy)/100;
+      let bullet = new Bullet(x +50*Math.cos(direction), y+50*Math.sin(direction), direction+spread, this.damage);
       this.setBulletStats(bullet);
       bulletPhysics.bullets.push(bullet);
       this.triggered = 1;
@@ -233,9 +282,18 @@ class Pistol extends Weapon {
   }
 }
 
-class DoublePistol extends Weapon {
+class Pistol extends SemiAutomaticWeapon {
   constructor() {
-    super(300, 1, 400);
+    super(300, 95, 400);
+    this.spriteName = "pistol.png";
+    this.spriteWidth = 30;
+    this.spriteHeight = 18;
+  }
+}
+
+class DoublePistol extends SemiAutomaticWeapon {
+  constructor() {
+    super(300, 95, 400);
     this.spriteName = "doublePistols.png";
     this.spriteWidth = 30;
     this.spriteHeight = 48;
@@ -245,10 +303,13 @@ class DoublePistol extends Weapon {
   {
     let time = new Date();
     if(!this.triggered && time - this.lastShot >= this.fireRate) {
-      let bullet1 = new Bullet(x + 20*Math.cos(direction+Math.PI/2) + 50*Math.cos(direction), y + 20*Math.sin(direction+Math.PI/2) + 50*Math.sin(direction), direction);
+      this.lastShot = time;
+      let spread1 = (Math.random() - 0.5)*Math.PI*(100-this.accuracy)/100;
+      let bullet1 = new Bullet(x + 20*Math.cos(direction+Math.PI/2) + 50*Math.cos(direction), y + 20*Math.sin(direction+Math.PI/2) + 50*Math.sin(direction), direction+spread1, this.damage);
       this.setBulletStats(bullet1);
       bulletPhysics.bullets.push(bullet1);
-      let bullet2 = new Bullet(x - 20*Math.cos(direction+Math.PI/2) + 50*Math.cos(direction), y - 20*Math.sin(direction+Math.PI/2) + 50*Math.sin(direction), direction);
+      let spread2 = (Math.random() - 0.5)*Math.PI*(100-this.accuracy)/100;
+      let bullet2 = new Bullet(x - 20*Math.cos(direction+Math.PI/2) + 50*Math.cos(direction), y - 20*Math.sin(direction+Math.PI/2) + 50*Math.sin(direction), direction+spread2, this.damage);
       this.setBulletStats(bullet2);
       bulletPhysics.bullets.push(bullet2);
       this.triggered = 1;
@@ -256,25 +317,33 @@ class DoublePistol extends Weapon {
   }
 }
 
-class Rifle extends Weapon {
+class Rifle extends AutomaticWeapon {
   constructor() {
-    super(350, 1, 200);
+    super(400, 98, 150);
     this.spriteName = "rifle.png";
-    this.spriteWidth = 163;
-    this.spriteHeight = 80;
+    this.spriteWidth = 109;
+    this.spriteHeight = 40;
   }
-  shoot (x, y, direction, bulletPhysics)
-  {
-    let time = new Date();
-    if (time - this.lastShot >= this.fireRate) {
-      this.lastShot = time;
-      let bullet = new Bullet(x+50*Math.cos(direction), y+50*Math.sin(direction), direction);
-      this.setBulletStats(bullet);
-      bulletPhysics.bullets.push(bullet);
-    }
+
+}
+
+class Smg extends AutomaticWeapon {
+  constructor() {
+    super(100, 80, 50);
+    this.spriteName = "smg.png";
+    this.spriteWidth = 80;
+    this.spriteHeight = 80;
   }
 }
 
+class Gatling extends AutomaticWeapon {
+  constructor() {
+    super(300, 70, 20);
+    this.spriteName = "gatling.png";
+    this.spriteWidth = 80;
+    this.spriteHeight = 80;
+  }
+}
 
 class Model {
   constructor() {
