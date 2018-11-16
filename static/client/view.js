@@ -23,9 +23,11 @@ PIXI.loader
 .add("static/client/sprites/water.png")
 .add("static/client/sprites/lava.png")
 .add("static/client/sprites/brick.png")
+.add("static/client/sprites/floor.png")
 
 .add("static/client/sprites/player.png")
 .add("static/client/sprites/pistol.png")
+.add("static/client/sprites/revolver.png")
 .add("static/client/sprites/doublePistols.png")
 .add("static/client/sprites/rifle.png")
 .add("static/client/sprites/smg.png")
@@ -70,8 +72,8 @@ for (let id in players) {
   let weaponSprite = new PIXI.Sprite(PIXI.loader.resources['static/client/sprites/'+player.weapon.spriteName].texture);
   weaponSprite.anchor.set(0.5,0.5);
   weaponSprite.rotation = player.direction;
-  weaponSprite.x=player.x+30*Math.cos(player.direction);
-  weaponSprite.y=player.y+30*Math.sin(player.direction);
+  weaponSprite.x=player.x+10*Math.cos(player.direction);
+  weaponSprite.y=player.y+10*Math.sin(player.direction);
   app.stage.addChild(weaponSprite);
 
   let name = new PIXI.Text(player.name);

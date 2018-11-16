@@ -1,19 +1,29 @@
-  'use strict';
+'use strict';
 
 class Terrain {
-  constructor(speedArg, typeArg, damageArg) {
+  constructor(speedArg, typeArg, damageArg, isPassableArg) {
     this.speed = speedArg;
     this.type=typeArg;
     this.damage = damageArg;
+    this.isPassable = isPassableArg;
   }
 }
-let sand = new Terrain (3, 'sand', 0);
-let edge = new Terrain (3, 'edge', 0);
-let grass = new Terrain (5, 'grass', 0);
-let water = new Terrain (1, 'water', 0);
-let lava = new Terrain (10, 'lava', 5);
 
 
+let sand = new Terrain (3, 'sand', 0, 1);
+let edge = new Terrain (3, 'edge', 0, 0);
+let grass = new Terrain (5, 'grass', 0, 1);
+let water = new Terrain (1, 'water', 0, 1);
+let lava = new Terrain (10, 'lava', 5, 1);
+let brick = new Terrain (3, 'brick', 0, 0);
+let floor = new Terrain (6, 'floor', 0, 1);
+
+class Point {
+  constructor(xArg, yArg) {
+    this.x=xArg;
+    this.y=yArg;
+  }
+}
 
 class Map {
   constructor() {
@@ -24,22 +34,34 @@ class Map {
       this.square[i] = [];
       for (let j = 0; j < this.widthInSquares; j++) {
         if (i==0 || j==0 || i==99 || j==99)
-          this.square[i][j]=edge;
+        this.square[i][j]=edge;
         else
-          this.square[i][j]=grass;
+        this.square[i][j]=grass;
 
       }
     }
-      this.createArea(new Point(1, 1), 50, 0.75, sand);
-      this.createArea(new Point(10, 30), 200, 0.75, sand);
-      this.createArea(new Point(97, 50), 1000, 0.65, sand);
-      this.createArea(new Point(97, 97), 1000, 0.90, water);
-      this.createArea(new Point(20, 30), 200, 0.75, water);
-      this.createArea(new Point(20, 5), 100, 0.75, water);
-      this.createArea(new Point(50, 50), 800, 0.60, water);
-      this.createArea(new Point(50, 90), 800, 0.60, lava);
-      this.createArea(new Point(2, 2), 30, 0.60, lava);
-      }
+    this.createArea(new Point(1, 1), 50, 0.75, sand);
+    this.createArea(new Point(10, 30), 200, 0.75, sand);
+    this.createArea(new Point(97, 50), 1000, 0.65, sand);
+    this.createArea(new Point(50, 20), 500, 0.65, sand);
+    this.createArea(new Point(97, 97), 1000, 0.90, water);
+    this.createArea(new Point(20, 30), 200, 0.75, water);
+    this.createArea(new Point(20, 5), 100, 0.75, water);
+    this.createArea(new Point(50, 50), 800, 0.60, water);
+    this.createArea(new Point(50, 90), 800, 0.65, lava);
+    this.createArea(new Point(2, 2), 30, 0.65, lava);
+    this.createWall(50, 10, 4, "horizontally");
+    this.createWall(80, 30, 4, "vertically");
+
+    this.createBuilding(15,15,10, 10, 2);
+    this.createBuilding(20,20,15, 20, 3);
+    this.createBuilding(45,45,10,10, 18);
+    this.createBuilding(60,10,30, 10, 9);
+    this.createBuilding(20,80,40, 5, 7);
+    this.createBridge(80,80,10);
+
+
+  }
 
 
   createArea(center, size, randomness, type) { ///using a DFS algorithm
@@ -50,7 +72,7 @@ class Map {
     {
       let current=queue.shift();
       if (this.square[current.y][current.x] === type)
-        continue;
+      continue;
       this.square[current.y][current.x]=type;
       currentSize++;
 
@@ -72,16 +94,78 @@ class Map {
       }
     }
   }
-}
 
-class Building {
-  constructor()
-}
+  createBuilding(x, y, width, height, numberOfDoors ) {
 
-class Point {
-  constructor(xArg, yArg) {
-    this.x=xArg;
-    this.y=yArg;
+    this.createWall(x,y,width,"horizontally");
+    this.createWall(x,y+height-1,width,"horizontally");
+    this.createWall(x,y,height,"vertically");
+    this.createWall(x+width-1,y,height,"vertically");
+
+    while(numberOfDoors--)
+    {
+      let doorsX, doorsY;
+      switch (Math.floor(Math.random()*4)) {
+        case 0://east
+          doorsX = x+width-1;
+          doorsY = y+Math.floor(Math.random()*(height-4))+1;
+          this.square[doorsY][doorsX] = floor;
+          this.square[doorsY+1][doorsX] = floor;
+          break;
+
+        case 1://north
+          doorsX = x+Math.floor(Math.random()*(width-4))+1;
+          doorsY = y;
+          this.square[doorsY][doorsX] = floor;
+          this.square[doorsY][doorsX+1] = floor;
+
+          break;
+
+        case 2://west
+          doorsX = x;
+          doorsY = y+Math.floor(Math.random()*(height-4))+1;
+          this.square[doorsY][doorsX] = floor;
+          this.square[doorsY+1][doorsX] = floor;
+          break;
+
+        case 3://south
+          doorsX = x+Math.floor(Math.random()*(width-4))+1;
+          doorsY = y+height-1;
+          this.square[doorsY][doorsX] = floor;
+          this.square[doorsY][doorsX+1] = floor;
+          break;
+      }
+
+    }//numberOfDoors is changed now
+
+    for (let i=1;i<height-1;i++) {
+      for (let j=1;j<width-1;j++) {
+        this.square[y+i][x+j] = floor;
+      }
+    }
+  }
+
+  createBridge(x, y, size) {
+    this.createWall(x,y,size,"vertically");
+    this.createWall(x+size-1,y,size,"vertically");
+    for (let i=1;i<size-1;i++) {
+      for (let j=1;j<size-1;j++) {
+        this.square[x+i][y+j] = floor;
+      }
+    }
+  }
+
+  createWall(x,y,length, direction) {
+    for (let i=0; i<length; i++)
+    {
+      if(this.square[y][x+i] != floor && direction == 'horizontally') {
+        this.square[y][x+i] = brick;
+        continue;
+      }
+      if(this.square[y+i][x] != floor && direction == 'vertically') {
+        this.square[y+i][x] = brick;
+      }
+    }
   }
 }
 
@@ -93,6 +177,26 @@ class Player {
     this.direction = directionArg;
     this.name = nameArg;
     this.weapon = new Pistol();
+  }
+
+  pickUpItem(item, items) {
+    if (!(this.weapon instanceof Pistol))
+      this.dropItem(items);
+    this.weapon = item;
+  }
+
+  dropItem(items){
+
+    let dirX = -1;
+    if(Math.random()>0.5)
+      dirX = 1;
+    let dirY = -1;
+    if(Math.random()>0.5)
+      dirY = 1;
+    this.weapon.x=this.x + 100*dirX;
+    this.weapon.y=this.y + 100*dirY;
+    if (!(this.weapon instanceof Pistol))
+      items.push(this.weapon);
   }
 
 }
@@ -115,24 +219,28 @@ class BulletPhysics {
     this.bullets = [];
   }
 
-  update() {
+  update(map) {
     for (let i=0; i<this.bullets.length; i++){
       this.bullets[i].x += this.bullets[i].speed * Math.cos(this.bullets[i].direction);
       this.bullets[i].y += this.bullets[i].speed * Math.sin(this.bullets[i].direction);
       this.bullets[i].distanceTraveled += this.bullets[i].speed;
+      if(!map.square[Math.floor((this.bullets[i].y)/50)][Math.floor((this.bullets[i].x)/50)].isPassable) {
+        this.bullets.splice(i,1);
+        i--;
+      }
     }
   }
 
   checkRange() {
-      let length = this.bullets.length;
-      for (let i=0; i<length; i++) {
-        if (this.bullets[i].distanceTraveled>=this.bullets[i].range) {
-          this.bullets.splice(i,1);
-          length--;
-          i--;
-        }
-
+    let length = this.bullets.length;
+    for (let i=0; i<length; i++) {
+      if (this.bullets[i].distanceTraveled>=this.bullets[i].range) {
+        this.bullets.splice(i,1);
+        length--;
+        i--;
       }
+
+    }
   }
 
   checkHits(players) {
@@ -150,10 +258,17 @@ class BulletPhysics {
   }
 }
 
+class Item {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+}
+
 class Items {
-  constructor() {
+  constructor(mapSquares) {
     this.array = [];
-    this.generateItems(100);
+    this.generateItems(100, mapSquares);
   };
 
   checkColissions(players) {
@@ -163,7 +278,7 @@ class Items {
       for (let i=0; i<this.array.length; i++) {
         if (  this.array[i].x>=player.x-this.array[i].spriteWidth && this.array[i].x<=player.x+this.array[i].spriteWidth && this.array[i].y>=player.y-this.array[i].spriteHeight && this.array[i].y<=player.y+this.array[i].spriteHeight) {
           if (this.array[i] instanceof Weapon)
-            player.weapon = this.array[i];
+            player.pickUpItem(this.array[i], this.array);
           else
             this.array[i].heal(player);
           this.array.splice(i,1);
@@ -173,44 +288,48 @@ class Items {
     }
   };
 
-  generateItems(amount) {
+  generateItems(amount, mapSquares) {
     for (let i=0; i<amount; i++)
     {
       let item = new Item();
-      switch( Math.floor(Math.random()*5) ) {
+      switch( Math.floor(Math.random()*6) ) {
 
-           case 0:
-           item = new DoublePistol();
-           break;
+        case 0:
+        item = new DoublePistol();
+        break;
 
-           case 1:
-           item = new Rifle();
-           break;
+        case 1:
+        item = new Rifle();
+        break;
 
-           case 2:
-           item = new Smg();
-           break;
+        case 2:
+        item = new Revolver();
+        break;
 
-           case 3:
-           item = new Gatling();
-           break;
+        case 3:
+        item = new Smg();
+        break;
 
-           case 4:
-           item = new HealthPack();
-           break;
+        case 4:
+        item = new Gatling();
+        break;
 
-       }
-       item.x=Math.floor(Math.random()*5000);
-       item.y=Math.floor(Math.random()*5000);
-       this.array.push(item);
-     }
-  }
-}
+        case 5:
+        item = new HealthPack();
+        break;
 
-class Item {
-  constructor(x = 100, y = 100) {
-    this.x = x;
-    this.y = y;
+      }
+      let newX, newY;
+    do {
+         newX = Math.random()*5000;
+         newY = Math.random()*5000;
+      }   while (!mapSquares[Math.floor(newX/50)][Math.floor(newY/50)].isPassable );
+
+      item.x=newX;
+      item.y=newY;
+
+      this.array.push(item);
+    }
   }
 }
 
@@ -219,8 +338,8 @@ class HealthPack extends Item {
     super();
     this.healthGain = 500;
     this.spriteName = "healthPack.png";
-    this.spriteWidth = 100;
-    this.spriteHeight = 100;
+    this.spriteWidth = 50;
+    this.spriteHeight = 50;
   }
 
   heal(player) {
@@ -256,7 +375,7 @@ class AutomaticWeapon extends Weapon {
     if (time - this.lastShot >= this.fireRate) {
       this.lastShot = time;
       let spread = (Math.random() - 0.5)*Math.PI*(100-this.accuracy)/100;
-      let bullet = new Bullet(x+50*Math.cos(direction), y+50*Math.sin(direction), direction+spread, this.damage);
+      let bullet = new Bullet(x+30*Math.cos(direction), y+30*Math.sin(direction), direction+spread, this.damage);
       this.setBulletStats(bullet);
       bulletPhysics.bullets.push(bullet);
     }
@@ -274,7 +393,7 @@ class SemiAutomaticWeapon extends Weapon {
     if(!this.triggered && time - this.lastShot >= this.fireRate) {
       this.lastShot = time;
       let spread = (Math.random() - 0.5)*Math.PI*(100-this.accuracy)/100;
-      let bullet = new Bullet(x +50*Math.cos(direction), y+50*Math.sin(direction), direction+spread, this.damage);
+      let bullet = new Bullet(x +30*Math.cos(direction), y+30*Math.sin(direction), direction+spread, this.damage);
       this.setBulletStats(bullet);
       bulletPhysics.bullets.push(bullet);
       this.triggered = 1;
@@ -286,6 +405,15 @@ class Pistol extends SemiAutomaticWeapon {
   constructor() {
     super(300, 95, 400);
     this.spriteName = "pistol.png";
+    this.spriteWidth = 30;
+    this.spriteHeight = 18;
+  }
+}
+
+class Revolver extends SemiAutomaticWeapon {
+  constructor() {
+    super(600, 100, 500);
+    this.spriteName = "revolver.png";
     this.spriteWidth = 30;
     this.spriteHeight = 18;
   }
@@ -321,8 +449,8 @@ class Rifle extends AutomaticWeapon {
   constructor() {
     super(400, 98, 150);
     this.spriteName = "rifle.png";
-    this.spriteWidth = 109;
-    this.spriteHeight = 40;
+    this.spriteWidth = 90;
+    this.spriteHeight = 33;
   }
 
 }
@@ -332,23 +460,23 @@ class Smg extends AutomaticWeapon {
     super(100, 80, 50);
     this.spriteName = "smg.png";
     this.spriteWidth = 80;
-    this.spriteHeight = 80;
+    this.spriteHeight = 65;
   }
 }
 
 class Gatling extends AutomaticWeapon {
   constructor() {
-    super(300, 70, 20);
+    super(300, 70, 15);
     this.spriteName = "gatling.png";
-    this.spriteWidth = 80;
-    this.spriteHeight = 80;
+    this.spriteWidth = 90;
+    this.spriteHeight = 33;
   }
 }
 
 class Model {
   constructor() {
     this.map = new Map();
-    this.items = new Items();
+    this.items = new Items(this.map.square);
   };
 
   getMap() {

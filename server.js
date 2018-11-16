@@ -48,12 +48,12 @@ let playersInQueue = [];
 io.on('connection', function(socket) {
   socket.on('new player', function() {
     if (playersInQueue.length > 0)
-      players[socket.id] = model.getNewPlayer(Math.floor(Math.random()*5000),Math.floor(Math.random()*5000),1000,0, playersInQueue.shift());
-    else { // this prevents nonames form joining to game
-        players[socket.id] = model.getNewPlayer(500,500,800,0, 'noName');
-      }
+    players[socket.id] = model.getNewPlayer(Math.floor(Math.random()*5000),Math.floor(Math.random()*5000),1000,0, playersInQueue.shift());
+    else { // this prevents nonames from joining to game
+      players[socket.id] = model.getNewPlayer(500,500,800,0, 'noName');
+    }
     console.log("Player connected: " +socket.id);
-    console.log(players);
+//    console.log(players);
   });
 
   socket.on('disconnect', function() {
@@ -64,24 +64,21 @@ io.on('connection', function(socket) {
     let player = players[socket.id] || {};
     let speed = model.map.square[Math.floor((player.y)/50)][Math.floor((player.x)/50)].speed;
     player.health -= model.map.square[Math.floor((player.y)/50)][Math.floor((player.x)/50)].damage;
-
+    let oldX = player.x;
+    let oldY = player.y;
     player.direction=input.direction;
-    if (input.left) {
-      player.x -= speed;
-    }
-    if (input.up) {
-      player.y -= speed;
-    }
-    if (input.right) {
-      player.x += speed;
-    }
-    if (input.down) {
-      player.y += speed;
-    }
-    if (player.x<50) player.x=50;
-    else if (player.x>100*50-50) player.x=100*50-50;
-    if (player.y<50) player.y=50;
-    else if (player.y>100*50-50) player.y=100*50-50;
+
+
+    player.y = player.y - speed*input.up + speed*input.down;
+    if (!model.map.square[Math.floor((player.y+25)/50)][Math.floor((player.x)/50)].isPassable || !model.map.square[Math.floor((player.y-25)/50)][Math.floor((player.x)/50)].isPassable ||
+        !model.map.square[Math.floor((player.y)/50)][Math.floor((player.x+25)/50)].isPassable || !model.map.square[Math.floor((player.y)/50)][Math.floor((player.x-25)/50)].isPassable )
+            player.y = oldY;
+
+    player.x = player.x - speed*input.left + speed*input.right;
+    if (!model.map.square[Math.floor((player.y+25)/50)][Math.floor((player.x)/50)].isPassable || !model.map.square[Math.floor((player.y-25)/50)][Math.floor((player.x)/50)].isPassable ||
+        !model.map.square[Math.floor((player.y)/50)][Math.floor((player.x+25)/50)].isPassable || !model.map.square[Math.floor((player.y)/50)][Math.floor((player.x-25)/50)].isPassable)
+          player.x = oldX;
+
 
     if (input.LMB == true)
       player.weapon.shoot( player.x, player.y, player.direction, bulletPhysics);
@@ -102,7 +99,7 @@ for (let i = 0; i < 17; i++) {
 
 setInterval(function() {
   bulletPhysics.checkRange();
-  bulletPhysics.update();
+  bulletPhysics.update(model.getMap());
   bulletPhysics.checkHits(players);
   model.getItems().checkColissions(players);
 
@@ -117,17 +114,18 @@ setInterval(function() {
     }
 
     if (io.sockets.connected[key] && thisPlayer.health <= 0) {
-    io.to(key).emit('death');
-    io.sockets.connected[key].disconnect();
-    continue;
-}
+      thisPlayer.dropItem(model.getItems().array);
+      io.to(key).emit('death');
+      io.sockets.connected[key].disconnect();
+      continue;
+    }
 
 
 
     for (let i = 0; i < 17; i++) {
       for (let j = 0; j < 21; j++) {
         playerMap[i][j]=model.map.square[Math.min(Math.max(Math.floor(players[key].y/50)-8+i , 0) , 99)]
-                                  [Math.min(Math.max(Math.floor(players[key].x/50)-10+j , 0) , 99)].type;
+        [Math.min(Math.max(Math.floor(players[key].x/50)-10+j , 0) , 99)].type;
       }
     }
 
@@ -138,4 +136,4 @@ setInterval(function() {
 
 
 
-////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
