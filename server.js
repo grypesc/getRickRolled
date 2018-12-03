@@ -25,16 +25,12 @@ app.get('/', function(request, response) {
 });
 
 app.post('', function(req, res) {
+  console.log(req);
   res.sendFile(path.join(__dirname, 'index.html'));
   playersInQueue.push(req.body.nick);
-
-
 });
 
 server.listen(54070, "0.0.0.0");
-
-
-
 
 require('dns').lookup(require('os').hostname(), function (err, add, fam) {
   console.log('addr: '+add);
@@ -47,16 +43,28 @@ let playersInQueue = [];
 
 io.on('connection', function(socket) {
   socket.on('new player', function() {
-    if (playersInQueue.length > 0)
-    players[socket.id] = model.getNewPlayer(Math.floor(Math.random()*5000),Math.floor(Math.random()*5000),1000,0, playersInQueue.shift());
-    else { // this prevents nonames from joining to game
-      players[socket.id] = model.getNewPlayer(500,500,800,0, 'noName');
-    }
-    console.log("Player connected: " +socket.id);
-//    console.log(players);
+    if (playersInQueue.length > 0) {
+      let x,y;
+      do {
+        x = Math.floor(Math.random()*5000);
+        y = Math.floor(Math.random()*5000);
+      } while(!model.map.square[Math.floor(y/50)][Math.floor(x/50)].isPassable)
+
+    players[socket.id] = model.getNewPlayer(x,y,1000,0, playersInQueue.shift());
+  }
+    else
+      players[socket.id] = model.getNewPlayer(500,500,0,0, 'noName');
+    console.log("Player connected: " + players[socket.id].name + " " + socket.id);
+    model.leaderboard.addEntry(players[socket.id].name, socket.id, 0);
   });
 
   socket.on('disconnect', function() {
+    for (let i=0; i<model.leaderboard.array.length; i++) {
+      if  (model.leaderboard.array[i].socketId == socket.id) {
+        model.leaderboard.array.splice(i,1);
+        break;
+      }
+    }
     delete players[socket.id];
   });
 
@@ -81,7 +89,7 @@ io.on('connection', function(socket) {
 
 
     if (input.LMB == true)
-      player.weapon.shoot( player.x, player.y, player.direction, bulletPhysics);
+      player.weapon.shoot( player.x, player.y, player.direction, bulletPhysics, socket.id);
     else
       player.weapon.triggered = 0;
   });
@@ -105,7 +113,7 @@ setInterval(function() {
 
 
   for (let key in players) {
-    let thisPlayer=players[key];//players
+    let thisPlayer=players[key];
     let thisPlayerAbsolute=thisPlayer;
     let emitPlayers = JSON.parse(JSON.stringify(players));
     for (let key2 in emitPlayers) {
@@ -114,6 +122,9 @@ setInterval(function() {
     }
 
     if (io.sockets.connected[key] && thisPlayer.health <= 0) {
+      if (io.sockets.connected[thisPlayer.killedBy]) {
+        model.leaderboard.addPoint(thisPlayer.killedBy);
+        }
       thisPlayer.dropItem(model.getItems().array);
       io.to(key).emit('death');
       io.sockets.connected[key].disconnect();
@@ -129,7 +140,7 @@ setInterval(function() {
       }
     }
 
-    io.to(key).emit('update', emitPlayers, thisPlayer, thisPlayerAbsolute, playerMap, bulletPhysics.bullets, model.getItems().array);
+    io.to(key).emit('update', emitPlayers, thisPlayer, thisPlayerAbsolute, playerMap, bulletPhysics.bullets, model.getItems().array, model.leaderboard.array);
   }}, 1000 / 60);
 
 

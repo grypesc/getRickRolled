@@ -23,9 +23,10 @@ class Controller {
 
 
   listenToUpdate() {
-    socket.on('update', function(newPlayers, newcurrentPlayer, newAbsoluteCurrentPlayer, currentPlayerMap, bulletsArg, itemsArg) {
+    socket.on('update', function(newPlayers, newCurrentPlayer, newAbsoluteCurrentPlayer, currentPlayerMap, bulletsArg, itemsArg, leaderboard2) {
       players = newPlayers;
-      currentPlayer=newcurrentPlayer;
+      currentPlayer=newCurrentPlayer;
+        leaderboard = leaderboard2;
       currentPlayer.xAbsolute=newAbsoluteCurrentPlayer.x;
       currentPlayer.yAbsolute=newAbsoluteCurrentPlayer.y;
       bullets=bulletsArg;
@@ -44,7 +45,7 @@ class Controller {
   listenToDeath() {
     socket.on('death', function() {
       setTimeout(function(){ controller.mode = "dead"; }, 1000);
-      setTimeout(function(){ if (window.confirm("Ooops, you were owned. Don't you want to cancel not being not owned again?"))
+      setTimeout(function(){ if (window.confirm("Ooops, you were owned. Don't you want to stop not being not owned again?"))
                            { window.location.href='http://widit.knu.ac.kr/~rypesc/';
                            }
                              else
@@ -71,7 +72,6 @@ class GameMap  {
       }
     }
   }
-
 }
 
 class Player {
@@ -101,4 +101,12 @@ class Bullet {
     this.range = 100;
     this.distanceTraveled = 0;
   };
+}
+
+class Entry {
+  constructor(name, socketId, score) {
+    this.name = name;
+    this.socketId = socketId;
+    this.score = score;
+  }
 }

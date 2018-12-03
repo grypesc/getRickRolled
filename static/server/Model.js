@@ -177,6 +177,8 @@ class Player {
     this.direction = directionArg;
     this.name = nameArg;
     this.weapon = new Pistol();
+    this.score = 0;
+    this.killedBy = "notAPlayer";
   }
 
   pickUpItem(item, items) {
@@ -202,14 +204,15 @@ class Player {
 }
 
 class Bullet {
-  constructor(xArg, yArg, directionArg, damageArg) {
+  constructor(xArg, yArg, directionArg, damageArg, ownerArg) {
     this.x = xArg;
     this.y = yArg;
     this.direction = directionArg;
     this.speed = 20;
-    this.range = 1000;
+    this.range = 800;
     this.distanceTraveled = 0;
     this.damage = damageArg;
+    this.owner = ownerArg;
   };
 
 }
@@ -250,6 +253,8 @@ class BulletPhysics {
       for (let i=0; i<this.bullets.length; i++) {
         if (this.bullets[i].x>=player.x-20 && this.bullets[i].x<=player.x+20 && this.bullets[i].y>=player.y-20 && this.bullets[i].y<=player.y+20) {
           player.health -= this.bullets[i].damage;
+          if (player.health<=0)
+            player.killedBy = this.bullets[i].owner;
           this.bullets.splice(i,1);
           i--;
         }
@@ -369,13 +374,13 @@ class AutomaticWeapon extends Weapon {
     super(dmg, acc, fireRate);
   };
 
-  shoot (x, y, direction, bulletPhysics)
+  shoot (x, y, direction, bulletPhysics, shooter)
   {
     let time = new Date();
     if (time - this.lastShot >= this.fireRate) {
       this.lastShot = time;
       let spread = (Math.random() - 0.5)*Math.PI*(100-this.accuracy)/100;
-      let bullet = new Bullet(x+30*Math.cos(direction), y+30*Math.sin(direction), direction+spread, this.damage);
+      let bullet = new Bullet(x+30*Math.cos(direction), y+30*Math.sin(direction), direction+spread, this.damage, shooter);
       this.setBulletStats(bullet);
       bulletPhysics.bullets.push(bullet);
     }
@@ -387,13 +392,13 @@ class SemiAutomaticWeapon extends Weapon {
     super(dmg, acc, fireRate);
   };
 
-  shoot (x, y, direction, bulletPhysics)
+  shoot (x, y, direction, bulletPhysics, shooter)
   {
     let time = new Date();
     if(!this.triggered && time - this.lastShot >= this.fireRate) {
       this.lastShot = time;
       let spread = (Math.random() - 0.5)*Math.PI*(100-this.accuracy)/100;
-      let bullet = new Bullet(x +30*Math.cos(direction), y+30*Math.sin(direction), direction+spread, this.damage);
+      let bullet = new Bullet(x +30*Math.cos(direction), y+30*Math.sin(direction), direction+spread, this.damage, shooter);
       this.setBulletStats(bullet);
       bulletPhysics.bullets.push(bullet);
       this.triggered = 1;
@@ -473,11 +478,52 @@ class Gatling extends AutomaticWeapon {
   }
 }
 
+class Entry {
+  constructor(name, socketId, score) {
+    this.name = name;
+    this.socketId = socketId;
+    this.score = score;
+  }
+}
+
+class Leaderboard {
+  constructor() {
+    this.array = [];
+  }
+
+  addEntry(name, socketId, score) {
+    this.array.push(new Entry(name, socketId, score));
+    this.sort();
+  }
+
+  addPoint(socketId) {
+    for (let i=0; i<=this.array.length; i++ ) {
+      if (this.array[i].socketId == socketId) {
+      console.log("added");
+        this.array[i].score++;
+        break;
+      }
+    }
+    this.sort();
+  }
+
+  sort() {
+    this.array.sort(function(a, b) {
+      return a.score < b.score;
+    });
+  }
+}
+
 class Model {
   constructor() {
     this.map = new Map();
     this.items = new Items(this.map.square);
+    this.leaderboard = new Leaderboard();
   };
+
+  getLeaderboard() {
+    return this.leaderboard;
+  }
 
   getMap() {
     return this.map;
@@ -485,6 +531,7 @@ class Model {
   getItems() {
     return this.items;
   }
+
 
   getNewPlayer(xArg, yArg, healthArg, directionArg, nameArg) {
     return new Player(xArg, yArg, healthArg, directionArg, nameArg);

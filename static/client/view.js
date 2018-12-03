@@ -137,4 +137,49 @@ for (let id in players) {
   app.stage.addChild(pointPlayer);
 }
 
+let leaderboardBackground = new PIXI.Graphics();
+leaderboardBackground.lineStyle(2, 0x000000, 0.7);
+leaderboardBackground.beginFill('black', 0.3);
+leaderboardBackground. drawRoundedRect(790, 10, 200, 200, 10);
+leaderboardBackground.endFill();
+app.stage.addChild(leaderboardBackground);
+
+let leaderboardVerticalLine = new PIXI.Graphics();
+
+leaderboardVerticalLine.beginFill(0x000000, 0.7);
+leaderboardVerticalLine.drawRect(930, 20, 2, 180);
+leaderboardVerticalLine.endFill();
+app.stage.addChild(leaderboardVerticalLine);
+
+let leaderboardHorizontalLine = new PIXI.Graphics();
+
+leaderboardHorizontalLine.beginFill(0x000000, 0.7);
+leaderboardHorizontalLine.drawRect(800, 40, 180, 2);
+leaderboardHorizontalLine.endFill();
+app.stage.addChild(leaderboardHorizontalLine);
+
+
+
+
+  let leaderboardTitle = new PIXI.Text("NICK              KILLS");
+  leaderboardTitle.style = {fill: 'white', strokeThickness: 0, fontSize: 15};
+  leaderboardTitle.position.set(850, 20);
+  app.stage.addChild(leaderboardTitle);
+
+    for (let i=0; i<leaderboard.length; i++ ) {
+      let entryName = new PIXI.Text(i+1+". " + leaderboard[i].name);
+      entryName.anchor.set(0.5,0.5);
+      entryName.style = {fill: 'white', strokeThickness: 0, fontSize: 15};
+      entryName.position.set(860, 55+i*20);
+      app.stage.addChild(entryName);
+
+      let entryKills = new PIXI.Text(leaderboard[i].score);
+      entryKills.anchor.set(0.5,0.5);
+      entryKills.style = {fill: 'white', strokeThickness: 0, fontSize: 15};
+      entryKills.position.set(960, 55+i*20);
+      app.stage.addChild(entryKills);
+
+      if(i>=7)
+        break;
+    }
 }
