@@ -1,0 +1,13 @@
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  cursor: crosshair;
+  font-family: Arial, Helvetica, sans-serif;
+  padding: 40px;
+  background-color: #262626;
+}
+
+</style>

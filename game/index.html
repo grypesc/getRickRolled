@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Game</title>
+  <link rel="stylesheet" href="static/client/game.css">
+</head>
+<script src="static/client/pixi/pixi.min.js"></script>
+<script src="socket.io/socket.io.js"></script>
+<script src="static/client/controller.js"></script>
+
+<body>
+  <script>
+"use strict";
+let leaderboard = [];
+var controller = new Controller();
+
+</script><script src="static/client/view.js"></script><script>
+function Terrain(pathArg)  {
+  this.path=pathArg;
+}
+document.body.appendChild(app.view);
+
+let gameMap = new GameMap();
+let players = [];
+let bullets = [];
+let items = [];
+let currentPlayer = new CurrentPlayer();
+
+////////////////////////////////////////////////////////////////////////////////
+let socket = io();
+
+let input = {
+  up: false,
+  down: false,
+  left: false,
+  right: false,
+  direction:  Math.PI,
+  LMB: false,
+}
+
+document.addEventListener('keydown', function(event) {
+  switch (event.keyCode) {
+    case 65: // A
+    input.left = true;
+    break;
+    case 87: // W
+    input.up = true;
+    break;
+    case 68: // D
+    input.right = true;
+    break;
+    case 83: // S
+    input.down = true;
+    break;
+  }
+});
+
+document.addEventListener('keyup', function(event) {
+  switch (event.keyCode) {
+    case 65: // A
+    input.left = false;
+    break;
+    case 87: // W
+    input.up = false;
+    break;
+    case 68: // D
+    input.right = false;
+    break;
+    case 83: // S
+    input.down = false;
+    break;
+  }
+});
+
+document.addEventListener('mousemove', function(event) {
+  let arg=(event.y-controller.height/2 - controller.padding)/(event.x-controller.width/2-controller.padding);
+  if (event.x>=controller.width/2 +controller.padding )
+    currentPlayer.direction = Math.atan(arg);
+  else
+    currentPlayer.direction = Math.PI-Math.atan((-1)*arg);
+  input.direction=currentPlayer.direction;
+  }
+);
+
+document.addEventListener("mousedown", function() {
+    input.LMB=true;
+});
+document.addEventListener("mouseup", function() {
+    input.LMB=false;
+});
+
+</script>
+
+</body>
+</html>

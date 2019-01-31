@@ -1,96 +1,40 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Game</title>
-  <link rel="stylesheet" href="static/client/game.css">
+<title>Game</title>
+<link rel="stylesheet" href="menu.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
-<script src="static/client/pixi/pixi.min.js"></script>
-<script src="socket.io/socket.io.js"></script>
-<script src="static/client/controller.js"></script>
-
 <body>
-  <script>
-"use strict";
-let leaderboard = [];
-var controller = new Controller();
 
-</script><script src="static/client/view.js"></script><script>
-function Terrain(pathArg)  {
-  this.path=pathArg;
-}
-document.body.appendChild(app.view);
+<header>
+  <h2>Welcome to a shooting game</h2>
+</header>
 
-let gameMap = new GameMap();
-let players = [];
-let bullets = [];
-let items = [];
-let currentPlayer = new CurrentPlayer();
+<section>
+  <enterGameBox>
+      <form action='goGame' method="post">
+        <h3>Enter your nick</h3><br>
 
-////////////////////////////////////////////////////////////////////////////////
-let socket = io();
+        <input type="text"  value="" name="nick"><p></p>
 
-let input = {
-  up: false,
-  down: false,
-  left: false,
-  right: false,
-  direction:  Math.PI,
-  LMB: false,
-}
+        <input type="submit" value="Ok!"><p></p>
+      </form>
+      <input type="submit" value="Help"  onclick="window.location='help.html';" /><p></p>
+      <input type="submit" value="Source code"  onclick="window.location='sources.html';" />
+  </enterGameBox>
 
-document.addEventListener('keydown', function(event) {
-  switch (event.keyCode) {
-    case 65: // A
-    input.left = true;
-    break;
-    case 87: // W
-    input.up = true;
-    break;
-    case 68: // D
-    input.right = true;
-    break;
-    case 83: // S
-    input.down = true;
-    break;
-  }
-});
+  <article>
+    <h1>About</h1>
+    <p>This is a 2d shooting game. Server is implemented in node.js, while client side in Javascript and Perl/CGI.</p>
+    <p>Graphic library is PIXI.js. Enjoy your stay. Don't try this at home. Peace.</p>
+  </article>
+</section>
 
-document.addEventListener('keyup', function(event) {
-  switch (event.keyCode) {
-    case 65: // A
-    input.left = false;
-    break;
-    case 87: // W
-    input.up = false;
-    break;
-    case 68: // D
-    input.right = false;
-    break;
-    case 83: // S
-    input.down = false;
-    break;
-  }
-});
-
-document.addEventListener('mousemove', function(event) {
-  let arg=(event.y-controller.height/2 - controller.padding)/(event.x-controller.width/2-controller.padding);
-  if (event.x>=controller.width/2 +controller.padding )
-    currentPlayer.direction = Math.atan(arg);
-  else
-    currentPlayer.direction = Math.PI-Math.atan((-1)*arg);
-  input.direction=currentPlayer.direction;
-  }
-);
-
-document.addEventListener("mousedown", function() {
-    input.LMB=true;
-});
-document.addEventListener("mouseup", function() {
-    input.LMB=false;
-});
-
-</script>
+<footer>
+  <p>Created by Grzegorz Rypesc</p>
+</footer>
 
 </body>
 </html>
