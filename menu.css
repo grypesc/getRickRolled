@@ -1,0 +1,122 @@
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  padding: 40px;
+  width: 1200px;
+  height: 800px;
+  background-color: #262626;
+}
+
+/* Style the header */
+header {
+  background-color: #666;
+  padding: 30px;
+  text-align: center;
+  font-size: 35px;
+  color: white;
+}
+
+input[type=text] {
+    background-color: #f1f1f1;
+    border-radius: 4px;
+    color: black;
+    padding: 4px 4px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    width: 200px;
+}
+input[type=submit] {
+    background-color: #777;
+    border-radius: 16px;
+    color: white;
+    padding: 5px 30px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+}
+
+button[type=submit] {
+    background-color: #777;
+    border-radius: 16px;
+    color: white;
+    padding: 5px 30px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+}
+
+
+
+enterGameBox {
+  float: left;
+  width: 25%;
+  height: 300px;
+  background: lightgrey;
+  align-content: center;
+  text-align: center;
+  margin: auto;
+}
+
+article {
+  float: right;
+  width: 75%;
+  background-color: #f1f1f1;
+  height: 300px;
+  text-indent: 50px;
+  image-orientation:
+
+
+}
+
+sourceCode {
+  float: right;
+  width: 100%;
+  background-color: #f1f1f1;
+  height: 3000px;
+  text-indent: 50px;
+  image-orientation:
+}
+
+sources {
+  float: left;
+  background-color: white;
+  height: 400px;
+  width: 100%;
+  text-indent: 0px;
+  line-height: 22px;
+  display: block;
+}
+/* Clear floats after the columns */
+section:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.row {
+  display: flex;
+}
+
+.column {
+  flex: 33.33%;
+  padding: 10px;
+}
+
+
+footer {
+  background-color: #777;
+  padding: 10px;
+  text-align: center;
+  line-height: 150px;
+  color: white;
+  height: 200px
+}
+</style>
