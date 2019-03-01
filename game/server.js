@@ -26,12 +26,24 @@ app.get('/', function(req, res) {
 });
 
 app.get('/menu.css', function(req, res) {
-  res.sendFile(__dirname + "" + "/static/client/menu.css");
+  res.sendFile(path.join(__dirname + '/../menu.css'));
+});
+
+app.get('/help.html', function(req, res) {
+  res.sendFile(path.join(__dirname + '/../help.html'));
+});
+
+app.get('/mouse.png', function(req, res) {
+  res.sendFile(path.join(__dirname + '/../img/mouse.png'));
+});
+
+app.get('/wasd.jpg', function(req, res) {
+  res.sendFile(path.join(__dirname + '/../img/wasd.jpg'));
 });
 
 app.post('/goGame', function(req, res) {
   res.sendFile(path.join(__dirname, '/index.html'));
-
+  console.log(req.body);
   playersInQueue.push(req.body.nick);
 });
 
