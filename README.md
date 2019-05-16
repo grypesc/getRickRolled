@@ -4,3 +4,4 @@ To start the server run ````npm install  node server.js````
 
 ![Screenshot](screenshot.png?raw=true "Title")
 
+The code is a bit messy because it was my first Javascript project needed to be done asap. TODO is refactoring it into modules.
