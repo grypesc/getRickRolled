@@ -33,11 +33,11 @@ app.get('/help.html', function(req, res) {
   res.sendFile(path.join(__dirname + '/../help.html'));
 });
 
-app.get('/mouse.png', function(req, res) {
+app.get('/img/mouse.png', function(req, res) {
   res.sendFile(path.join(__dirname + '/../img/mouse.png'));
 });
 
-app.get('/wasd.jpg', function(req, res) {
+app.get('/img/wasd.jpg', function(req, res) {
   res.sendFile(path.join(__dirname + '/../img/wasd.jpg'));
 });
 
