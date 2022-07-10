@@ -46,11 +46,11 @@ class Controller {
     socket.on('death', function() {
       setTimeout(function(){ controller.mode = "dead"; }, 1000);
       setTimeout(function(){ if (window.confirm("Ooops, you were owned. Are you a noob?"))
-                           { window.location.href='https://rickrolled.fr/';
+                           { window.location.href='https://shattereddisk.github.io/rickroll/rickroll.mp4';
                            }
                              else
                              {
-                               window.location.href='https://rickrolled.fr/';
+                               window.location.href='https://shattereddisk.github.io/rickroll/rickroll.mp4';
                              }; }, 1500);
     }
 
